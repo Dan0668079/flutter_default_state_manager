@@ -1,23 +1,22 @@
-import 'dart:math';
-
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_state_manager/change_notifier/imc_change_notifier_controller.dart';
 import 'package:flutter_state_manager/widgets/imc_gauge.dart';
 import 'package:intl/intl.dart';
 
-class ValueNotifierPage extends StatefulWidget {
-  const ValueNotifierPage({Key? key}) : super(key: key);
+class ImcChangeNotifierPage extends StatefulWidget {
+  const ImcChangeNotifierPage({Key? key}) : super(key: key);
 
   @override
-  _ValueNotifierPageState createState() => _ValueNotifierPageState();
+  State<ImcChangeNotifierPage> createState() => _ImcChangeNotifierPageState();
 }
 
-class _ValueNotifierPageState extends State<ValueNotifierPage> {
+class _ImcChangeNotifierPageState extends State<ImcChangeNotifierPage> {
+  final controller = ImcChangeNotifierController(); // criando a instancia dela
   final pesoEC = TextEditingController();
   final alturaEC = TextEditingController();
   final formkey = GlobalKey<FormState>();
-  // var imc = 0.0; //? criando a variavel de estado 0.0 pois quero que seja um doble e não quero declarar ele. usado no setState o double aqui uvai ser uma classe ValueNotifier
-  var imc = ValueNotifier(0.0); // 0.0 valor inicial
+  //var imc = 0.0; //! criando a variavel de estado 0.0 pois quero que seja um doble e não quero declarar ele. OBS: não é mais preciso, neste caso foi criado no controller.
 
   @override
   void dispose() {
@@ -26,29 +25,12 @@ class _ValueNotifierPageState extends State<ValueNotifierPage> {
     super.dispose();
   }
 
-  // Método para Calcular o Imc
-  //passando dois parametros obrigatórios //! peso e altura
-  Future<void> _calcularIMC(
-      {required double peso, required double altura}) async {
-//     //! só para criar o efeito do ponteiro zerar e voltar o marcador
-
-    imc.value = 0; //retorna no 0
-    await Future.delayed(
-      const Duration(seconds: 1),
-    ); //colocando o tempo para poder visualizar
-
-    imc.value = peso / pow(altura, 2); //? elevado pow o campo , o expoente
-
-//     });
-  }
-
   @override
   Widget build(BuildContext context) {
-    print('----------------------------------------------------');
-    print('Build Tela');
+    print("Build Tela");
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Imc Value Notifier'),
+        title: const Text('Imc Change Notifier'),
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -57,17 +39,12 @@ class _ValueNotifierPageState extends State<ValueNotifierPage> {
             padding: const EdgeInsets.all(8),
             child: Column(
               children: [
-                ValueListenableBuilder<double>(
-                  valueListenable: imc,
-                  builder: (_, imcValue, __) {
-                    //dentro do bilder ele me da 3 metodos context, value e child, só vou precisar do value
-                    print(
-                        '----------------------------------------------------');
-                    print('ValueListenableBuilder');
-                    return ImcGauge(imc: imcValue);
-                  },
-                ),
-                //!substuido o componentes pela classe ImcGauge
+                AnimatedBuilder(
+                    animation: controller,//! serve como ouvinte nas alterações
+                    builder: (context, child) {
+                      print("AnimatedBuilder");
+                      return ImcGauge(imc: controller.imc);
+                    }),
                 const SizedBox(
                   height: 20,
                 ),
@@ -131,7 +108,9 @@ class _ValueNotifierPageState extends State<ValueNotifierPage> {
                       double peso = formatter.parse(pesoEC.text) as double;
                       double altura = formatter.parse(alturaEC.text) as double;
 
-                      _calcularIMC(peso: peso, altura: altura);
+                      controller.calcularIMC(peso: peso, altura: altura);
+
+                      // _calcularIMC(peso: peso, altura: altura);
                     }
                   },
                   child: const Text('Calcular IMC'),
