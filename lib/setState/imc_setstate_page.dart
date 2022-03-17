@@ -24,7 +24,7 @@ class _ImcSetstatePageState extends State<ImcSetstatePage> {
   
   // Método para Calcular o Imc
   //passando dois parametros obrigatórios //! peso e altura
-  void _calcularIMC({required double peso, required double altura}) async {
+  Future<void> _calcularIMC({required double peso, required double altura}) async {
     //! só para criar o efeito do ponteiro zerar e voltar o marcador
     setState(() {
       imc = 0; //retorna no 0

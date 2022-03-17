@@ -5,23 +5,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_state_manager/widgets/imc_gauge.dart';
 import 'package:intl/intl.dart';
 
-
-class ImcSetstatePage extends StatefulWidget {
-  const ImcSetstatePage({Key? key}) : super(key: key);
+class ValueNotifierPage extends StatefulWidget {
+  const ValueNotifierPage({Key? key}) : super(key: key);
 
   @override
-  State<ImcSetstatePage> createState() => _ImcSetstatePageState();
+  _ValueNotifierPageState createState() => _ValueNotifierPageState();
 }
 
-class _ImcSetstatePageState extends State<ImcSetstatePage> {
-
+class _ValueNotifierPageState extends State<ValueNotifierPage> {
   final pesoEC = TextEditingController();
   final alturaEC = TextEditingController();
   final formkey = GlobalKey<FormState>();
-  var imc = 0.0; //! criando a variavel de estado 0.0 pois quero que seja um doble e não quero declarar ele.
+  // var imc = 0.0; //? criando a variavel de estado 0.0 pois quero que seja um doble e não quero declarar ele. usado no setState o double aqui uvai ser uma classe ValueNotifier
+  var imc = ValueNotifier(0.0); // 0.0 valor inicial
 
   @override
-  void dispose(){
+  void dispose() {
     pesoEC.dispose();
     alturaEC.dispose();
     super.dispose();
@@ -29,21 +28,24 @@ class _ImcSetstatePageState extends State<ImcSetstatePage> {
 
   // Método para Calcular o Imc
   //passando dois parametros obrigatórios //! peso e altura
-  Future<void> _calcularIMC({required double peso, required double altura}) async {
-    //! só para criar o efeito do ponteiro zerar e voltar o marcador
-    setState(() {
-      imc = 0; //retorna no 0
-    });
-    await Future.delayed(const Duration(seconds: 1),); //colocando o tempo para poder visualizar
+  Future<void> _calcularIMC(
+      {required double peso, required double altura}) async {
+//     //! só para criar o efeito do ponteiro zerar e voltar o marcador
 
-//para atualizar qualquer váriavel qualquer estado preciso do//! método seState
-    setState(() {
-      imc = peso / pow(altura, 2); //? elevado pow o campo , o expoente
-    });
+    imc.value = 0; //retorna no 0
+    await Future.delayed(
+      const Duration(seconds: 1),
+    ); //colocando o tempo para poder visualizar
+
+    imc.value = peso / pow(altura, 2); //? elevado pow o campo , o expoente
+
+//     });
   }
 
   @override
   Widget build(BuildContext context) {
+    print('----------------------------------------------------');
+    print('Build Tela');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Imc SetState'),
@@ -55,14 +57,24 @@ class _ImcSetstatePageState extends State<ImcSetstatePage> {
             padding: const EdgeInsets.all(8),
             child: Column(
               children: [
-                ImcGauge(imc: imc), //!substuido o componentes pela classe ImcGauge
+                ValueListenableBuilder<double>(
+                  valueListenable: imc,
+                  builder: (_, imcValue, __) {
+                    //dentro do bilder ele me da 3 metodos context, value e child, só vou precisar do value
+                    print(
+                        '----------------------------------------------------');
+                    print('ValueListenableBuilder');
+                    return ImcGauge(imc: imcValue);
+                  },
+                ),
+                //!substuido o componentes pela classe ImcGauge
                 const SizedBox(
                   height: 20,
                 ),
                 TextFormField(
                   controller: pesoEC, //! usando o controller no meu formulário
                   keyboardType: // faz abrir só o teclado numérico sem letras
-                      TextInputType.number, 
+                      TextInputType.number,
                   decoration: const InputDecoration(labelText: 'Peso'),
                   inputFormatters: [
                     // foi adicionado nas dependencias
@@ -81,7 +93,8 @@ class _ImcSetstatePageState extends State<ImcSetstatePage> {
                   },
                 ),
                 TextFormField(
-                  controller: alturaEC, //! usando o controller no meu formulário
+                  controller:
+                      alturaEC, //! usando o controller no meu formulário
                   keyboardType:
                       TextInputType.number, // faz abrir só o teclado numérico
                   decoration: const InputDecoration(labelText: 'Altura'),
